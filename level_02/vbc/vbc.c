@@ -6,21 +6,13 @@
 typedef struct node
 {
 	enum{ADD, MULTI, VAL}	type;
-	int						value;
-	struct node				*l;
-	struct node				*r;
+	int		value;
+	struct node	*l;
+	struct node	*r;
 }	node;
 
 node	*parse_expr(char **s);
 void	destroy_tree(node *n);
-
-void	unexpected(char **s)
-{
-	if (**s == '\0')
-		printf("unexpected end of input\n");
-	else
-		printf("unexpected '%c'\n", **s);
-}
 
 node	*new_node(node n)
 {
@@ -29,6 +21,27 @@ node	*new_node(node n)
 		return NULL;
 	*ret = n;
 	return ret;
+
+}
+
+void	destroy_tree(node *n)
+{
+	if (!n)
+		return;
+	if (n->type != VAL)
+   	{
+		destroy_tree(n->l);
+		destroy_tree(n->r);
+	}
+	free(n);
+}
+
+void	unexpected_char(char **s)
+{
+	if (**s == '\0')
+		printf("unexpected end of input\n");
+	else
+		printf("unexpected '%c'\n", **s);
 }
 
 int	accept(char **s, char c)
@@ -45,7 +58,7 @@ int	expect(char **s, char c)
 {
 	if (accept(s, c))
 		return 1;
-	unexpected(s);
+	unexpected_char(s);
 	return 0;
 }
 
@@ -55,7 +68,7 @@ node	*parse_factor(char **s)
 	if (accept(s, '('))
 	{
 		node	*expr = parse_expr(s);
-		if(!accept(s, ')'))
+		if(!expr || !accept(s, ')'))
 		{
 			destroy_tree(expr);
 			return NULL;
@@ -82,8 +95,20 @@ node	*parse_term(char **s)
 		node	n;
 		n.type = MULTI;
 		n.l = left;
-		n.r = parse_term(s);
-		left = new_node(n);
+		n.r = parse_factor(s);
+		if (!n.r)
+		{
+			destroy_tree(left);
+			return NULL;
+		}
+		node *new = new_node(n);
+		if (!new)
+		{
+			destroy_tree(left);
+			destroy_tree(n.r);
+			return NULL;
+		}
+		left = new;
 	}
 	return left;
 }
@@ -100,22 +125,13 @@ node	*parse_expr(char **s)
 		n.l = ret;
 		n.r = parse_term(s);
 		if (!n.r)
+		{
+			destroy_tree(ret);
 			return NULL;
+		}
 		ret = new_node(n);
 	}
 	return ret;
-}
-
-void	destroy_tree(node *n)
-{
-	if (!n)
-		return;
-	if (n->type != VAL)
-    {
-        destroy_tree(n->l);
-        destroy_tree(n->r);
-    }
-	free(n);
 }
 
 int	eval_tree(node *tree)
@@ -132,23 +148,22 @@ int	eval_tree(node *tree)
 	return 0;
 }
 
-int	main(int ac, char **av)
+int	main(int argc, char **argv)
 {
-	if (ac != 2)
+	if (argc != 2)
 		return 1;
-	char *arg = av[1];
-	node	*tree;
-	tree = parse_expr(&arg);
+	char *arg = argv[1];
+	node	*tree = parse_expr(&arg);
 	if (*arg)
 	{
+		unexpected_char(&arg);
 		destroy_tree(tree);
-		unexpected(&arg);
 		return 1;
 	}
 	else if (!tree)
 	{
+		unexpected_char(&arg);
 		destroy_tree(tree);
-		unexpected(&arg);
 		return 1;
 	}
 	printf("%d\n", eval_tree(tree));

@@ -1,0 +1,40 @@
+allowed functions: getc, ungetc, printf, malloc, calloc, realloc, free, isdigit, fscanf, write.
+Write a function argo that will parse a json file in the structure declared.
+
+int argo(json* dst, FILE* stream);
+
+dst     is the pointer to the AST that you will create.
+stream  is the file to parse.
+
+your function will return 1 on success and -1 on failure.
+unexpected token should return "unexpected %c\n"
+unexpected token EOF should return "unexpected end of input\n"
+
+only handle numbers, strings and maps.
+Numbers will only be basic ints like in scanf("%d")
+Handle escaping in the strings only for backslashes and quotation marks (no \n \u ...)
+Don't handle spaces -> consider them as invalid tokens.
+
+$echo -n '1' | ./argo /dev/stdin | cat -e
+1$
+
+$echo -n '"bonjour"' | ./argo /dev/stdin | cat -e
+"bonjour"$
+
+$echo -n '"escape! \" "' | ./argo /dev/stdin | cat -e
+"escape! \" "$
+
+$echo -n '{"tomatoes":42,"potatoes":234}' | ./argo /dev/stdin | cat -e
+{"tomatoes":42,"potatoes":234}$
+
+$echo -n '{"recursion":{"recursion":{"recursion":{"recursion":"recursion"}}}}' | ./argo /dev/stdin | cat -e
+{"recursion":{"recursion":{"recursion":{"recursion":"recursion"}}}}$
+
+$echo -n '"unfinished string' | ./argo /dev/stdin | cat -e
+unexpected end of input$
+
+$echo -n '"unfinished string 2\"' | ./argo /dev/stdin | cat -e
+unexpected end of input$
+
+$echo -n '{"no value?":}' | ./argo /dev/stdin | cat -e
+unexpected token '}'$
