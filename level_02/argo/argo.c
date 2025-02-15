@@ -56,12 +56,12 @@ int parse_string(char **dst, FILE *stream)
 		free(buffer);
 		return -1;
 	}
-    while ((c = getc(stream)) != EOF) {  // <-- Fix here
+    while ((c = getc(stream)) != EOF) {
         if (c == '\\') {
             c = getc(stream);
             if (c != '\\' && c != '"') {
                 free(buffer);
-                unexpected(stream);  // Invalid escape sequence
+                unexpected(stream);
                 return -1;
             }
         } else if (c == '"') {
@@ -80,11 +80,8 @@ int parse_string(char **dst, FILE *stream)
         }
         buffer[len++] = c;
     }
-
-    // If we reach here, the string is unfinished
     free(buffer);
 	unexpected(stream);
-    // printf("unexpected end of input\n");  // Correct error message for EOF
     return -1;
 }
 
@@ -123,13 +120,6 @@ int parse_map(json *dst, FILE *stream) {
 		{
             free(key);
             free_json(value);
-            // size_t i = 0;
-            // while (i < dst->map.size - 1)
-			// {
-			//     free(dst->map.data[i].key);
-			//     free_json(dst->map.data[i].value);
-			//     i++;
-			// }
 			free(dst->map.data);
 			return -1;
 		}
@@ -143,69 +133,6 @@ int parse_map(json *dst, FILE *stream) {
     return 1;
 }
 
-/*
-int parse_map(json *dst, FILE *stream)
-{
-	dst->map.size = 0;
-	dst->map.data = NULL;
-	char *key;
-
-	// Ensure opening brace is consumed
-	if (!expect(stream, '{'))
-		return -1;
-	while (peek(stream) != '}')
-	{
-		if (dst->map.size > 0 && !expect(stream, ','))
-			return (-1);
-		// Parse key
-		key = NULL;
-		if (parse_string(&key, stream) == -1)
-			return (-1);
-		// Parse colon (:)
-		if (!expect(stream, ':'))
-		{
-			free(key);
-			return (-1);
-		}
-		// Parse value
-		json value;
-		if (argo(&value, stream) == -1)
-		{
-			free(key);
-			return (-1);
-		}
-		// Resize map
-		pair *new = realloc(dst->map.data, sizeof(pair) * dst->map.size + 1);
-		if (!new)
-		{
-			free(key);
-			free_json(value);
-			for (size_t i = 0; i < dst->map.size; i++)
-			{
-				free(dst->map.data[i].key);
-				free_json(dst->map.data[i].value);
-			}	
-			free(dst->map.data);
-			return (-1);
-		}
-		dst->map.data = new;
-		dst->map.data[dst->map.size].key = key;
-		dst->map.data[dst->map.size].value = value;
-		dst->map.size++;
-	}
-	if (!expect(stream, '}'))
-	{
-		for (size_t i = 0; i < dst->map.size; i++)
-		{
-            free(dst->map.data[i].key);
-            free_json(dst->map.data[i].value);
-        }
-		free(dst->map.data);
-		return (-1);
-	}
-	return (1);
-}
-*/
 
 int argo(json* dst, FILE* stream)
 {
@@ -213,19 +140,16 @@ int argo(json* dst, FILE* stream)
 
 	if (isdigit(c) || c == '-')
 	{
-		// INTEGER
 		dst->type = INTEGER;
 		return parse_integer(&dst->integer, stream);
 	}
-	else if (c == '"') // consume the first opening quote
+	else if (c == '"')
 	{
-		// STRING		
 		dst->type = STRING;
 		return parse_string(&dst->string, stream);
 	}
-	else if (c == '{') // consume the first opening quote
+	else if (c == '{')
 	{
-		// MAP
 		dst->type = MAP;
 		return parse_map(dst, stream);
 	}
