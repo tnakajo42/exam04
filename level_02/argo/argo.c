@@ -51,6 +51,7 @@ int	parse_string(char **dst, FILE *stream)
 
 	if (!buffer)
 		return (-1);
+	// Ensure opening quote is consumed
 	if (!expect(stream, '"'))
 	{
 		free(buffer);
