@@ -1,5 +1,5 @@
 #include "argo.h"
-#include <unistd.h> // fpr write()
+#include <unistd.h> // for write()
 
 int peek(FILE *stream) {
     int c = getc(stream);
