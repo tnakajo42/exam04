@@ -59,7 +59,8 @@ int	parse_string(char **dst, FILE *stream)
 	}
 	while ((c = getc(stream)) != EOF)
 	{
-		if (c == '\\') {
+		if (c == '\\')
+		{
 			c = getc(stream);
 			if (c != '\\' && c != '"')
 			{
@@ -78,7 +79,8 @@ int	parse_string(char **dst, FILE *stream)
 		{
 			size *= 2;
 			char *new = realloc(buffer, size);
-			if (!new) {
+			if (!new)
+			{
 				free(buffer);
 				return (-1);
 			}
