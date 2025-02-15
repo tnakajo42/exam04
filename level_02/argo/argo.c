@@ -1,5 +1,5 @@
 #include "argo.h"
-#include <unistd.h>
+#include <unistd.h> // fpr write()
 
 int peek(FILE *stream) {
     int c = getc(stream);
@@ -11,7 +11,7 @@ void unexpected(FILE *stream) {
     if (peek(stream) != EOF)
         printf("Unexpected token '%c'\n", peek(stream));
     else
-		write(1, "Unexpected end of input\n", 24);
+		write(1, "Unexpected end of input\n", 24); // CHANGED because fflush(stdout) is not allowed
 }
 
 int accept(FILE *stream, char c) {
@@ -39,61 +39,66 @@ int	parse_integer(int *dst, FILE *stream)
 		unexpected(stream);
 		return (-1);
 	}
-	return 1;
+	return (1);
 }
 
 int parse_string(char **dst, FILE *stream)
 {
 	size_t size = 16;
-    size_t len = 0;
-    char *buffer = malloc(size);
-    int c;
+	size_t len = 0;
+	char *buffer = malloc(size);
+	int c;
 
-    if (!buffer)
-        return -1;
-	// Ensure the opening quote is read
-	if (!expect(stream, '"')) {
+	if (!buffer)
+		return (-1);
+	if (!expect(stream, '"'))
+	{
 		free(buffer);
-		return -1;
+		return (-1);
 	}
-    while ((c = getc(stream)) != EOF) {
-        if (c == '\\') {
-            c = getc(stream);
-            if (c != '\\' && c != '"') {
-                free(buffer);
-                unexpected(stream);
-                return -1;
-            }
-        } else if (c == '"') {
-            buffer[len] = '\0';
-            *dst = buffer;
-            return 1;
-        }
-        if (len + 1 >= size) {
-            size *= 2;
-            char *new = realloc(buffer, size);
-            if (!new) {
-                free(buffer);
-                return -1;
-            }
-            buffer = new;
-        }
-        buffer[len++] = c;
-    }
-    free(buffer);
+	while ((c = getc(stream)) != EOF)
+	{
+		if (c == '\\') {
+			c = getc(stream);
+			if (c != '\\' && c != '"')
+			{
+				free(buffer);
+				unexpected(stream);
+				return (-1);
+			}
+		}
+		else if (c == '"')
+		{
+			buffer[len] = '\0';
+			*dst = buffer;
+			return (1);
+		}
+		if (len + 1 >= size)
+		{
+			size *= 2;
+			char *new = realloc(buffer, size);
+			if (!new) {
+				free(buffer);
+				return (-1);
+			}
+			buffer = new;
+		}
+		buffer[len++] = c;
+	}
+	free(buffer);
 	unexpected(stream);
-    return -1;
+	return (-1);
 }
 
-int parse_map(json *dst, FILE *stream) {
-    dst->map.size = 0;
+int parse_map(json *dst, FILE *stream)
+{
+	dst->map.size = 0;
     dst->map.data = NULL;
 	char *key;
-
+	
 	// Ensure opening brace is consumed
 	if (!expect(stream, '{'))
 		return -1;
-
     while (peek(stream) != '}')
 	{
 		if (dst->map.size > 0 && !expect(stream, ','))
@@ -110,9 +115,10 @@ int parse_map(json *dst, FILE *stream) {
 		}
         // Parse value
         json value;
-        if (argo(&value, stream) == -1) {
+        if (argo(&value, stream) == -1)
+		{
             free(key);
-            return -1;
+            return (-1);
         }
         // Add key-value pair to map
         dst->map.data = realloc(dst->map.data, sizeof(pair) * (dst->map.size + 1));
@@ -121,7 +127,7 @@ int parse_map(json *dst, FILE *stream) {
             free(key);
             free_json(value);
 			free(dst->map.data);
-			return -1;
+			return (-1);
 		}
 		dst->map.data[dst->map.size].key = key;
 		dst->map.data[dst->map.size].value = value;
@@ -129,10 +135,9 @@ int parse_map(json *dst, FILE *stream) {
     }
     // Consume the closing brace
     if (!expect(stream, '}'))
-        return -1;
-    return 1;
+        return (-1);
+    return (1);
 }
-
 
 int argo(json* dst, FILE* stream)
 {
