@@ -42,7 +42,7 @@ int	parse_integer(int *dst, FILE *stream)
 	return (1);
 }
 
-int parse_string(char **dst, FILE *stream)
+int	parse_string(char **dst, FILE *stream)
 {
 	size_t size = 16;
 	size_t len = 0;
@@ -90,7 +90,7 @@ int parse_string(char **dst, FILE *stream)
 	return (-1);
 }
 
-int parse_map(json *dst, FILE *stream)
+int	parse_map(json *dst, FILE *stream)
 {
 	dst->map.size = 0;
 	dst->map.data = NULL;
@@ -139,7 +139,7 @@ int parse_map(json *dst, FILE *stream)
 	return (1);
 }
 
-int argo(json* dst, FILE* stream)
+int	argo(json* dst, FILE* stream)
 {
 	int		c = peek(stream);
 
